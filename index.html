@@ -331,6 +331,21 @@
 <body>
   <div id="root"></div>
 
+  <!-- Cache-bust: reload with ?v= if app version changed, forces iOS Safari to fetch fresh HTML -->
+  <script>
+    (function() {
+      var APP_BUILD = "6";
+      var stored = localStorage.getItem("appBuild");
+      if (stored !== APP_BUILD) {
+        localStorage.setItem("appBuild", APP_BUILD);
+        var url = location.pathname + "?v=" + APP_BUILD;
+        if (location.search !== "?v=" + APP_BUILD) {
+          location.replace(url);
+        }
+      }
+    })();
+  </script>
+
   <script type="text/babel">
     const { useState, useEffect, useCallback } = React;
 
