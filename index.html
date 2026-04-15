@@ -333,7 +333,7 @@
     // ─── TASK DATA ───────────────────────────────────────────────────────────
     // Bump this version string whenever INITIAL_TASKS definitions change.
     // On load the app merges: task definitions from code, completed status from localStorage.
-    const TASKS_VERSION = "3";
+    const TASKS_VERSION = "4";
 
     const INITIAL_TASKS = [
       { id:1, step:1, window:"Feb 19", sortMonth:2, type:"Fertilizer", emoji:"🌱",
@@ -365,10 +365,10 @@
         completed:false, completedDate:null },
 
       { id:5, step:5, window:"Apr 15–30", sortMonth:4, type:"Fertilizer", emoji:"🌾",
-        title:"Light Spring Fertilizer (Low Nitrogen)",
-        desc:"Apply a light, slow-release, low-nitrogen fertilizer such as Scotts Turf Builder (no weed control). Avoid Weed & Feed products — they push excessive growth before summer heat stress and the herbicide can stress Tall Fescue as temps climb. For any weeds, continue spot-spraying with Mesotrione instead.",
-        notes:"Apply at HALF the bag rate. Mow before applying. Keep mower at 3.5\". Do not fertilize if temps are consistently above 80°F — wait until fall.",
-        verified:"✅ Updated: Weed & Feed removed. Low-N separate fertilizer is correct for Tall Fescue Zone 7b.",
+        title:"Scotts Turf Builder — Half Rate (No Weed Control)",
+        desc:"Use Scotts Turf Builder (plain, no weed control) at half the bag rate. Weed & Feed was removed because it pushes excessive top growth before summer heat stress, and the herbicide can damage Tall Fescue as temperatures rise. Weeds are handled separately — continue spot-spraying with your Mesotrione instead.",
+        notes:"Apply at HALF the bag rate. Mow before applying. Keep mower at 3.5\". Skip entirely if temps are consistently above 80°F — wait until fall.",
+        verified:"✅ Scotts Turf Builder plain only. No Weed & Feed on Tall Fescue.",
         completed:false, completedDate:null },
 
       { id:6, step:6, window:"May", sortMonth:5, type:"Mowing", emoji:"🌿",
