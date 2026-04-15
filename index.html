@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <!-- Content Security Policy: restricts scripts to known CDNs, API calls to Anthropic only -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com;
+    style-src 'unsafe-inline' https://cdnjs.cloudflare.com;
+    connect-src https://api.github.com;
+    img-src 'self' data:;
+    base-uri 'self';
+    form-action 'none';
+    frame-ancestors 'none';
+  " />
+  <title>🌿 Lawn Journal — Kunal</title>
+  <!-- Exact versions pinned — do not change without security review of the new version -->
+  <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.23.10/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-900: #0f2318;
+      --green-800: #1a3828;
+      --green-700: #1e4d34;
+      --green-600: #256b45;
+      --green-500: #2d8a57;
+      --green-400: #3aaf6f;
+      --green-300: #6dcf9a;
+      --green-100: #d4f0e0;
+      --green-50:  #edf8f2;
+      --earth:     #7c5c3a;
+      --tan:       #c9a97a;
+      --cream:     #faf7f2;
+      --warm-100:  #f3ede3;
+      --warm-200:  #e8ddd0;
+      --text-dark: #0f2318;
+      --text-mid:  #3d5240;
+      --text-muted:#6b7c6d;
+      --white:     #ffffff;
+      --red:       #c0392b;
+      --amber:     #d97706;
+      --blue:      #1d6fa4;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      background: var(--cream);
+      color: var(--text-dark);
+      min-height: 100vh;
+      max-width: 430px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    #root { padding-bottom: 80px; min-height: 100vh; }
+
+    /* ── Bottom Nav ── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 100%; max-width: 430px;
+      background: var(--green-900);
+      border-top: 1px solid var(--green-800);
+      display: flex;
+      z-index: 100;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .nav-btn {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      padding: 10px 0 8px;
+      background: none; border: none; cursor: pointer;
+      color: #5a7a60;
+      transition: color 0.15s;
+      font-size: 10px; font-weight: 600; letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+    .nav-btn.active { color: var(--green-300); }
+    .nav-btn svg { margin-bottom: 3px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--white);
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(15,35,24,0.07);
+      overflow: hidden;
+    }
+    .card-earthy {
+      background: var(--green-800);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    /* ── Scrollable content ── */
+    .screen { padding: 0 16px 24px; }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(160deg, var(--green-900) 0%, var(--green-700) 100%);
+      color: white;
+      padding: 52px 20px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      bottom: -30px; right: -20px;
+      width: 180px; height: 180px;
+      background: radial-gradient(circle, rgba(61,175,111,0.15) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .header-sub { font-size: 12px; color: var(--green-300); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px; }
+    .header-title { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+    .header-meta { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+
+    /* ── Section label ── */
+    .section-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-muted);
+      margin: 20px 0 8px;
+    }
+
+    /* ── Stat cards ── */
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-card {
+      background: var(--white);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 2px 10px rgba(15,35,24,0.06);
+    }
+    .stat-card.full { grid-column: 1 / -1; }
+    .stat-icon { font-size: 22px; margin-bottom: 6px; }
+    .stat-value { font-size: 28px; font-weight: 800; color: var(--green-700); letter-spacing: -1px; }
+    .stat-label { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-top: 2px; }
+    .stat-sub   { font-size: 10px; color: var(--green-400); font-weight: 600; margin-top: 4px; }
+
+    /* ── Next task big card ── */
+    .next-task-card {
+      background: linear-gradient(135deg, var(--green-700) 0%, var(--green-600) 100%);
+      border-radius: 18px;
+      padding: 18px;
+      color: white;
+      box-shadow: 0 4px 20px rgba(30,77,52,0.35);
+    }
+    .next-task-label { font-size: 11px; color: var(--green-300); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+    .next-task-title { font-size: 18px; font-weight: 700; margin-top: 4px; line-height: 1.3; }
+    .next-task-window { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 4px; }
+    .next-task-badge {
+      display: inline-flex; align-items: center;
+      background: rgba(255,255,255,0.15);
+      border-radius: 20px; padding: 4px 10px;
+      font-size: 11px; font-weight: 600; margin-top: 10px;
+    }
+
+    /* ── Progress bar ── */
+    .prog-track {
+      height: 6px; background: var(--warm-200); border-radius: 99px; overflow: hidden; margin-top: 6px;
+    }
+    .prog-fill {
+      height: 100%; background: var(--green-400); border-radius: 99px;
+      transition: width 0.6s ease;
+    }
+
+    /* ── Timeline ── */
+    .timeline { position: relative; }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 20px; top: 0; bottom: 0;
+      width: 2px; background: var(--warm-200);
+    }
+    .timeline-month {
+      font-size: 11px; font-weight: 700; color: var(--text-muted);
+      letter-spacing: 0.07em; text-transform: uppercase;
+      padding: 16px 0 8px 48px;
+    }
+    .timeline-month.current-month { color: var(--green-600); }
+    .timeline-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      position: absolute;
+      left: 15px;
+      top: 18px;
+      z-index: 1;
+    }
+    .timeline-entry {
+      position: relative;
+      margin-left: 40px;
+      margin-bottom: 10px;
+    }
+    .entry-card {
+      background: var(--white);
+      border-radius: 14px;
+      padding: 12px 14px;
+      box-shadow: 0 1px 8px rgba(15,35,24,0.06);
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .entry-card:active { transform: scale(0.98); }
+    .entry-card.done { opacity: 0.55; }
+    .entry-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .entry-step { font-size: 10px; color: var(--text-muted); font-weight: 600; }
+    .entry-title { font-size: 14px; font-weight: 700; color: var(--text-dark); margin-top: 1px; line-height: 1.3; }
+    .entry-title.done-title { text-decoration: line-through; color: var(--text-muted); }
+    .entry-window { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+    .entry-badge {
+      font-size: 10px; font-weight: 700; padding: 3px 8px;
+      border-radius: 20px; flex-shrink: 0; white-space: nowrap;
+    }
+    .entry-expanded { border-top: 1px solid var(--warm-100); margin-top: 10px; padding-top: 10px; }
+    .entry-desc { font-size: 13px; color: var(--text-mid); line-height: 1.5; }
+    .entry-note {
+      background: #fffbeb; border-left: 3px solid var(--amber);
+      border-radius: 0 8px 8px 0; padding: 8px 10px;
+      font-size: 12px; color: #92400e; line-height: 1.5; margin-top: 8px;
+    }
+    .entry-verified {
+      font-size: 11px; font-weight: 600; padding: 6px 10px;
+      border-radius: 8px; margin-top: 6px; line-height: 1.4;
+    }
+    .check-btn {
+      width: 26px; height: 26px; border-radius: 50%;
+      border: 2px solid var(--warm-200);
+      background: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all 0.15s;
+    }
+    .check-btn.checked { background: var(--green-500); border-color: var(--green-500); }
+    .done-date { font-size: 11px; color: var(--green-500); font-weight: 600; margin-top: 3px; }
+
+    /* ── Month pill ── */
+    .month-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    /* ── Mow journal ── */
+    .mow-entry {
+      background: var(--white);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 1px 8px rgba(15,35,24,0.06);
+      margin-bottom: 10px;
+    }
+    .mow-date-row { display: flex; align-items: center; justify-content: space-between; }
+    .mow-date { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+    .mow-weekday { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-top: 1px; }
+    .mow-stats { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+    .mow-stat {
+      background: var(--cream);
+      border-radius: 8px; padding: 6px 10px;
+      text-align: center; min-width: 60px;
+    }
+    .mow-stat-val { font-size: 16px; font-weight: 800; color: var(--green-700); }
+    .mow-stat-lbl { font-size: 10px; color: var(--text-muted); font-weight: 500; }
+    .rule-warn { background: #fef2f2; border-radius: 8px; padding: 6px 10px; margin-top: 8px; font-size: 12px; color: var(--red); font-weight: 500; }
+    .rule-ok   { background: var(--green-50); border-radius: 8px; padding: 6px 10px; margin-top: 8px; font-size: 12px; color: var(--green-600); font-weight: 500; }
+
+    /* ── Form ── */
+    .form-card { background: var(--white); border-radius: 16px; padding: 16px; box-shadow: 0 2px 12px rgba(15,35,24,0.08); margin-bottom: 14px; }
+    .form-label { font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 5px; display: block; }
+    .form-input {
+      width: 100%; background: var(--cream); border: 1.5px solid var(--warm-200);
+      border-radius: 10px; padding: 10px 12px; font-size: 14px; color: var(--text-dark);
+      transition: border-color 0.15s;
+    }
+    .form-input:focus { outline: none; border-color: var(--green-400); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn-primary {
+      width: 100%; background: var(--green-700); color: white;
+      border: none; border-radius: 12px; padding: 13px; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: background 0.15s; margin-top: 12px;
+    }
+    .btn-primary:hover { background: var(--green-600); }
+    .btn-ghost { background: none; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; padding: 8px; }
+
+    /* ── Tools ── */
+    .tool-section { margin-bottom: 14px; }
+    .calc-stepper { display: flex; align-items: center; gap: 16px; justify-content: center; margin: 16px 0; }
+    .stepper-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--warm-100); border: none; font-size: 22px; font-weight: 700;
+      color: var(--green-700); cursor: pointer; transition: background 0.1s;
+    }
+    .stepper-btn:hover { background: var(--warm-200); }
+    .stepper-val { font-size: 42px; font-weight: 800; color: var(--green-700); min-width: 70px; text-align: center; letter-spacing: -1px; }
+    .stepper-unit { font-size: 16px; color: var(--text-muted); }
+    .ing-row {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--cream); border-radius: 10px; padding: 11px 14px; margin-bottom: 8px;
+    }
+    .ing-name { font-size: 13px; font-weight: 600; color: var(--text-dark); }
+    .ing-amount { font-size: 15px; font-weight: 800; color: var(--green-700); }
+    .temp-row {
+      border-radius: 10px; padding: 10px 12px; margin-bottom: 7px;
+      border-left: 4px solid;
+    }
+    .temp-range { font-size: 12px; font-weight: 700; }
+    .temp-effect { font-size: 12px; margin-top: 2px; }
+
+    /* ── Empty state ── */
+    .empty { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-title { font-size: 16px; font-weight: 700; color: var(--text-mid); }
+    .empty-sub { font-size: 13px; margin-top: 4px; }
+
+    /* ── Fade in ── */
+    @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation: fadeUp 0.25s ease; }
+
+    /* ── Overdue/alert banner ── */
+    .alert-banner {
+      background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px;
+      padding: 12px 14px; margin-bottom: 10px;
+    }
+    .alert-title { font-size: 13px; font-weight: 700; color: var(--red); }
+    .alert-item { font-size: 12px; color: #7f1d1d; margin-top: 3px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback } = React;
+
+    // ─── TASK DATA ───────────────────────────────────────────────────────────
+    const INITIAL_TASKS = [
+      { id:1, step:1, window:"Feb 19", sortMonth:2, type:"Fertilizer", emoji:"🌱",
+        title:"Scotts Halts — Pre-Emergent",
+        desc:"Apply Scotts Halts crabgrass pre-emergent barrier before soil temps hit 55°F.",
+        notes:"Front yard looks yellowish — normal west-facing dormancy. Will clear after first mow and a warm stretch.",
+        verified:"✅ Perfect timing for Concord, NC.",
+        completed:true, completedDate:"Feb 19, 2026" },
+
+      { id:2, step:2, window:"Mar 15–25", sortMonth:3, type:"Mowing", emoji:"🌿",
+        title:"First Spring Mow at 3.5\"",
+        desc:"Set mower deck to 3.5\". Mulch clippings back into lawn for nutrients.",
+        notes:"⚠️ 1/3 RULE: If grass is taller than 4.75\", cut to 4.5\" first — wait 5–7 days — THEN 3.5\".",
+        verified:"✅ Correct for NC Piedmont Tall Fescue.",
+        completed:false, completedDate:null },
+
+      { id:3, step:3, window:"Mar 25–Apr 15", sortMonth:3, type:"Mowing", emoji:"🌿",
+        title:"Maintain 3.5\" — Every 6–8 Days",
+        desc:"Keep height at 3.5\" through early spring. Mow on schedule — don't let it get ahead of you.",
+        notes:"Grass grows fast in spring. Falling behind forces you to violate the 1/3 rule.",
+        verified:"✅ Standard spring maintenance.",
+        completed:false, completedDate:null },
+
+      { id:4, step:4, window:"Apr 1–15", sortMonth:4, type:"Soil Test", emoji:"🧪",
+        title:"Soil Test — Cabarrus Extension",
+        desc:"Pick up and drop off kit at Cabarrus Extension Office (715 Cabarrus Ave W). Submit AFTER April 1 for free testing.",
+        notes:"Take TWO separate samples — front yard AND backyard. Different shade + drainage = different pH.",
+        verified:"✅ Free window opens April 1. Correct location.",
+        completed:false, completedDate:null },
+
+      { id:5, step:5, window:"Apr 15–30", sortMonth:4, type:"Fertilizer", emoji:"🌾",
+        title:"Light Spring Fertilizer (Low Nitrogen)",
+        desc:"Apply a light, slow-release, low-nitrogen fertilizer such as Scotts Turf Builder (no weed control). Avoid Weed & Feed products — they push excessive growth before summer heat stress and the herbicide can stress Tall Fescue as temps climb. For any weeds, continue spot-spraying with Mesotrione instead.",
+        notes:"Apply at HALF the bag rate. Mow before applying. Keep mower at 3.5\". Do not fertilize if temps are consistently above 80°F — wait until fall.",
+        verified:"✅ Updated: Weed & Feed removed. Low-N separate fertilizer is correct for Tall Fescue Zone 7b.",
+        completed:false, completedDate:null },
+
+      { id:6, step:6, window:"May", sortMonth:5, type:"Mowing", emoji:"🌿",
+        title:"Maintain 3.5\" — Prime Growth Month",
+        desc:"May is Tall Fescue's fastest month. Mow every 5–7 days. Keep blades sharp.",
+        notes:"Dull blades shred tips and cause browning. Consider sharpening before May.",
+        verified:"✅ Correct. May is peak fescue season.",
+        completed:false, completedDate:null },
+
+      { id:7, step:7, window:"May 20–30", sortMonth:5, type:"Amendment", emoji:"🪨",
+        title:"Apply Pelletized Lime (if pH < 6.0)",
+        desc:"IF soil test shows pH below 6.0, apply pelletized lime per test recommendation.",
+        notes:"Fescue needs pH 6.0–6.5. Concord red clay often runs acidic. Pelletized is faster than ag lime.",
+        verified:"✅ Correct product and timing. Wait for test results.",
+        completed:false, completedDate:null },
+
+      { id:8, step:8, window:"June 1", sortMonth:6, type:"Mowing", emoji:"⬆️",
+        title:"RAISE Mower to 4.0\" — Summer",
+        desc:"On or before June 1, raise mower deck to 4.0\". This is the most critical summer move.",
+        notes:"Taller grass shades soil, keeps roots cooler. This is the difference between survival and failure.",
+        verified:"✅ Critical. Do not skip.",
+        completed:false, completedDate:null },
+
+      { id:9, step:9, window:"June–August", sortMonth:6, type:"Weed Control", emoji:"🧴",
+        title:"Spot Spray Only — NO Fertilizer",
+        desc:"Spot treat weeds with 1 tsp Mesotrione + 3 tsp Surfactant per gallon. Zero fertilizer this period.",
+        notes:"Fertilizing fescue in summer is the #1 mistake in NC. It forces weak growth during heat stress.",
+        verified:"✅ Absolutely correct. Hold firm.",
+        completed:false, completedDate:null },
+
+      { id:10, step:10, window:"Jun 15–30", sortMonth:6, type:"Fungicide", emoji:"🍄",
+        title:"Apply Scotts DiseaseEx — Brown Patch",
+        desc:"Apply Scotts DiseaseEx preventively before first hot/humid stretch.",
+        notes:"⚠️ Apply EARLY if you see circular brown patches forming. Don't wait for the calendar date.",
+        verified:"✅ Brown Patch is common in Concord. Preventive is better than reactive.",
+        completed:false, completedDate:null },
+
+      { id:11, step:11, window:"July–August", sortMonth:7, type:"Mowing", emoji:"☀️",
+        title:"Maintain 4.0\" — Every 10–14 Days",
+        desc:"Reduce frequency. Never mow wilting or drought-stressed grass.",
+        notes:"If it looks brown and isn't growing — don't mow. Semi-dormancy is okay. Water deeply 1–2x/week.",
+        verified:"✅ Correct summer protocol.",
+        completed:false, completedDate:null },
+
+      { id:12, step:12, window:"Sept 1–15", sortMonth:9, type:"Mowing", emoji:"✂️",
+        title:"Lower Mower to 3.0\" — Seeding Prep",
+        desc:"Before aerating, lower deck to 3.0\" to help new seed reach soil.",
+        notes:"⚠️ CORRECTED from original (was 2.5\"): 3.0\" achieves good seed contact without stressing existing turf in warm September temps.",
+        verified:"⚠️ CORRECTED: Changed from 2.5\" → 3.0\" for better results.",
+        completed:false, completedDate:null },
+
+      { id:13, step:13, window:"Sept 5–20", sortMonth:9, type:"Renovation", emoji:"🌱",
+        title:"Aerate & Overseed + Starter Fert",
+        desc:"Core aerate, then spread quality Tall Fescue blend. Apply Scotts Starter Fertilizer. Water daily for 2–3 weeks.",
+        notes:"MOST IMPORTANT step of the year. Use Turf-Type Tall Fescue blend — not a budget mix.",
+        verified:"✅ September is #1 month for fescue renovation in NC.",
+        completed:false, completedDate:null },
+
+      { id:14, step:14, window:"Sept 5–20", sortMonth:9, type:"Weed Control", emoji:"🛡️",
+        title:"Spray Mesotrione + Blue Dye (NO surfactant)",
+        desc:"Apply Mesotrione without surfactant to suppress weeds near germinating seed.",
+        notes:"DO NOT add surfactant — it kills germinating seedlings. Blue dye tracks your coverage.",
+        verified:"✅ Correct and advanced technique.",
+        completed:false, completedDate:null },
+
+      { id:15, step:15, window:"Oct 15–30", sortMonth:10, type:"Mowing", emoji:"🌾",
+        title:"First Mow of New Grass at 3.0\"",
+        desc:"Wait until seedlings reach 4.5\" then cut to 3.0\". Sharp blades essential.",
+        notes:"Dull blades pull seedlings out by the roots. Sharpen before this mow.",
+        verified:"✅ Correct. Don't rush the first post-seeding mow.",
+        completed:false, completedDate:null },
+
+      { id:16, step:16, window:"Nov 15–Dec 1", sortMonth:11, type:"Fertilizer", emoji:"❄️",
+        title:"Scotts WinterGuard (Step 4)",
+        desc:"Apply Scotts Step 4 WinterGuard — deep root feeding with potassium for winter.",
+        notes:"This feeds 2027 spring green-up. Apply before first hard freeze.",
+        verified:"✅ Perfect timing for Zone 7b.",
+        completed:false, completedDate:null },
+    ];
+
+    const MONTH_NAMES = {2:"February",3:"March",4:"April",5:"May",6:"June",7:"July",8:"August",9:"September",10:"October",11:"November"};
+    const TYPE_COLORS = {
+      "Fertilizer": {bg:"#dbeafe", text:"#1e40af"},
+      "Mowing":     {bg:"#dcfce7", text:"#166534"},
+      "Soil Test":  {bg:"#fef9c3", text:"#713f12"},
+      "Amendment":  {bg:"#ffedd5", text:"#9a3412"},
+      "Weed Control":{bg:"#fee2e2", text:"#991b1b"},
+      "Fungicide":  {bg:"#f3e8ff", text:"#6b21a8"},
+      "Renovation": {bg:"#ccfbf1", text:"#065f46"},
+    };
+
+    // ─── STORAGE ─────────────────────────────────────────────────────────────
+    function load(key, fb) { try { const v=localStorage.getItem(key); return v?JSON.parse(v):fb; } catch{return fb;} }
+    function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch{} }
+
+    // ─── GITHUB GIST API ─────────────────────────────────────────────────────
+    const GIST_FILENAME = "lawn-tracker-data.json";
+    const GH_API = "https://api.github.com";
+
+    function ghHeaders(token) {
+      return {
+        "Authorization": `Bearer ${token}`,
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "Content-Type": "application/json",
+      };
+    }
+
+    // Sanitize GitHub error responses — never surface raw messages
+    function sanitizeGhError(status) {
+      if (status === 401) return "GitHub token is invalid or expired. Re-enter it in Tools → Sync.";
+      if (status === 403) return "GitHub token lacks Gist permission. Create a new token with the 'gist' scope.";
+      if (status === 404) return "Sync data not found. Your Gist may have been deleted — re-connect in Tools → Sync.";
+      if (status === 422) return "Data was rejected by GitHub (too large or malformed).";
+      if (status >= 500)  return "GitHub is having issues. Try syncing again shortly.";
+      return "GitHub sync failed. Check your connection and token.";
+    }
+
+    // Create a new secret Gist with initial data; returns gist ID
+    async function gistCreate(token, data) {
+      const res = await fetch(`${GH_API}/gists`, {
+        method: "POST",
+        headers: ghHeaders(token),
+        body: JSON.stringify({
+          description: "Lawn Tracker — personal sync data (do not edit manually)",
+          public: false,
+          files: { [GIST_FILENAME]: { content: JSON.stringify(data, null, 2) } },
+        }),
+      });
+      if (!res.ok) throw new Error(sanitizeGhError(res.status));
+      const gist = await res.json();
+      return gist.id;
+    }
+
+    // Read data from an existing Gist; returns parsed data object
+    async function gistRead(token, gistId) {
+      const res = await fetch(`${GH_API}/gists/${encodeURIComponent(gistId)}`, {
+        headers: ghHeaders(token),
+      });
+      if (!res.ok) throw new Error(sanitizeGhError(res.status));
+      const gist = await res.json();
+      const content = gist.files?.[GIST_FILENAME]?.content;
+      if (!content) throw new Error("Data file missing from Gist. Re-connect in Tools → Sync.");
+      const parsed = JSON.parse(content);
+      // Validate shape before trusting it
+      if (!Array.isArray(parsed.tasks) || !Array.isArray(parsed.mowLogs))
+        throw new Error("Gist data is corrupted or wrong format.");
+      return parsed;
+    }
+
+    // Find an existing Lawn Tracker Gist in the user's account; returns gist ID or null
+    async function gistFindExisting(token) {
+      // Fetch up to 100 gists (paginated); check first two pages to be safe
+      for (let page = 1; page <= 2; page++) {
+        const res = await fetch(`${GH_API}/gists?per_page=100&page=${page}`, {
+          headers: ghHeaders(token),
+        });
+        if (!res.ok) throw new Error(sanitizeGhError(res.status));
+        const gists = await res.json();
+        if (!gists.length) break;
+        const match = gists.find(g => g.files && g.files[GIST_FILENAME]);
+        if (match) return match.id;
+      }
+      return null;
+    }
+
+    // Write updated data to an existing Gist
+    async function gistUpdate(token, gistId, data) {
+      const res = await fetch(`${GH_API}/gists/${encodeURIComponent(gistId)}`, {
+        method: "PATCH",
+        headers: ghHeaders(token),
+        body: JSON.stringify({
+          files: { [GIST_FILENAME]: { content: JSON.stringify(data, null, 2) } },
+        }),
+      });
+      if (!res.ok) throw new Error(sanitizeGhError(res.status));
+    }
+
+    // Validate GitHub token format before saving
+    function isValidGhToken(t) {
+      // Classic: ghp_xxx  |  Fine-grained: github_pat_xxx  |  OAuth: gho_xxx
+      return typeof t === "string" &&
+        t.length >= 20 && t.length <= 300 &&
+        /^(ghp_|github_pat_|gho_|ghs_)/.test(t) &&
+        !/[\s<>]/.test(t);
+    }
+
+    // ─── APP ─────────────────────────────────────────────────────────────────
+    function App() {
+      const [tab, setTab]         = useState("home");
+      const [tasks, setTasks]     = useState(() => load("lawnTasks26", INITIAL_TASKS));
+      const [mowLogs, setMowLogs] = useState(() => load("mowLogs26", []));
+
+      // Gist sync state
+      const [ghToken,   setGhToken]   = useState(() => load("lawnGhToken", ""));
+      const [gistId,    setGistId]    = useState(() => load("lawnGistId",  ""));
+      const [syncStatus, setSyncStatus] = useState("idle"); // idle | syncing | synced | error
+      const [syncMsg,    setSyncMsg]    = useState("");
+      const [lastSynced, setLastSynced] = useState(() => load("lawnLastSynced", null));
+
+      // Track whether data was loaded from Gist already this session
+      const gistLoadedRef = React.useRef(false);
+      // Debounce timer ref for auto-save
+      const saveTimerRef  = React.useRef(null);
+
+      // ── On mount: if token + gistId exist, load remote data ──
+      useEffect(() => {
+        if (!ghToken || !gistId || gistLoadedRef.current) return;
+        gistLoadedRef.current = true;
+        setSyncStatus("syncing");
+        setSyncMsg("Loading your data from GitHub…");
+        gistRead(ghToken, gistId)
+          .then(data => {
+            setTasks(data.tasks);
+            setMowLogs(data.mowLogs);
+            save("lawnTasks26", data.tasks);
+            save("mowLogs26",   data.mowLogs);
+            setSyncStatus("synced");
+            setSyncMsg("Loaded from GitHub Gist");
+            setLastSynced(new Date().toISOString());
+            save("lawnLastSynced", new Date().toISOString());
+          })
+          .catch(e => {
+            setSyncStatus("error");
+            setSyncMsg(e.message);
+          });
+      }, []); // eslint-disable-line
+
+      // ── Always keep localStorage in sync ──
+      useEffect(() => { save("lawnTasks26", tasks); },   [tasks]);
+      useEffect(() => { save("mowLogs26",  mowLogs); }, [mowLogs]);
+
+      // ── Debounced auto-save to Gist whenever tasks or mowLogs change ──
+      useEffect(() => {
+        if (!ghToken || !gistId || !gistLoadedRef.current) return;
+        clearTimeout(saveTimerRef.current);
+        setSyncStatus("pending");
+        saveTimerRef.current = setTimeout(() => {
+          setSyncStatus("syncing");
+          setSyncMsg("Saving to GitHub…");
+          gistUpdate(ghToken, gistId, { tasks, mowLogs, lastSaved: new Date().toISOString() })
+            .then(() => {
+              setSyncStatus("synced");
+              setSyncMsg("");
+              setLastSynced(new Date().toISOString());
+              save("lawnLastSynced", new Date().toISOString());
+            })
+            .catch(e => {
+              setSyncStatus("error");
+              setSyncMsg(e.message);
+            });
+        }, 3000); // 3-second debounce — batches rapid changes into one save
+        return () => clearTimeout(saveTimerRef.current);
+      }, [tasks, mowLogs]); // eslint-disable-line
+
+      function toggleTask(id) {
+        setTasks(prev => prev.map(t => {
+          if (t.id !== id) return t;
+          const completed = !t.completed;
+          return { ...t, completed, completedDate: completed
+            ? new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : null };
+        }));
+      }
+
+      const done  = tasks.filter(t => t.completed).length;
+      const total = tasks.length;
+      const currentMonth = new Date().getMonth() + 1;
+      const nextTask = tasks.find(t => !t.completed && t.sortMonth >= currentMonth);
+      const lastMow  = mowLogs[0] || null;
+
+      // Sync badge shown in headers
+      const syncBadge = (
+        syncStatus === "syncing" ? <span style={{fontSize:11,color:"rgba(255,255,255,0.7)",display:"flex",alignItems:"center",gap:4}}>
+          <span style={{animation:"spin 1s linear infinite",display:"inline-block"}}>⟳</span> Syncing…
+        </span>
+        : syncStatus === "synced" ? <span style={{fontSize:11,color:"var(--green-300)",display:"flex",alignItems:"center",gap:4}}>
+          ✓ Synced to GitHub
+        </span>
+        : syncStatus === "error" ? <span style={{fontSize:11,color:"#fca5a5",display:"flex",alignItems:"center",gap:4}}>
+          ⚠ Sync error
+        </span>
+        : syncStatus === "pending" ? <span style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>
+          Saving…
+        </span>
+        : ghToken && gistId
+          ? <span style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>
+              ☁ GitHub Gist
+            </span>
+          : <span style={{fontSize:11,color:"rgba(255,255,255,0.35)"}}>
+              Local only · set up sync in Tools
+            </span>
+      );
+
+      return (
+        <>
+          <style>{`@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }`}</style>
+          {tab==="home"     && <HomeScreen tasks={tasks} done={done} total={total} nextTask={nextTask} lastMow={lastMow} currentMonth={currentMonth} syncBadge={syncBadge} />}
+          {tab==="plan"     && <PlanScreen tasks={tasks} toggleTask={toggleTask} currentMonth={currentMonth} syncBadge={syncBadge} />}
+          {tab==="log"      && <LogScreen logs={mowLogs} setLogs={setMowLogs} syncBadge={syncBadge} />}
+          {tab==="products" && <ProductsScreen />}
+          {tab==="tools"    && <ToolsScreen
+              tasks={tasks} setTasks={setTasks} setMowLogs={setMowLogs}
+              ghToken={ghToken} setGhToken={setGhToken}
+              gistId={gistId}   setGistId={setGistId}
+              syncStatus={syncStatus} syncMsg={syncMsg} lastSynced={lastSynced}
+              setSyncStatus={setSyncStatus} setSyncMsg={setSyncMsg}
+              tasks_data={tasks} mowLogs_data={mowLogs}
+              gistLoadedRef={gistLoadedRef}
+          />}
+          <nav className="bottom-nav">
+            {[
+              { id:"home",     icon:<HomeIcon />,     label:"Home"     },
+              { id:"plan",     icon:<PlanIcon />,     label:"Plan"     },
+              { id:"log",      icon:<LogIcon />,      label:"Mow Log"  },
+              { id:"products", icon:<ProductsIcon />, label:"Products" },
+              { id:"tools",    icon:<ToolsIcon />,    label:"Tools"    },
+            ].map(n => (
+              <button key={n.id} className={`nav-btn ${tab===n.id?"active":""}`} onClick={()=>setTab(n.id)}>
+                {n.icon}
+                {n.label}
+              </button>
+            ))}
+          </nav>
+        </>
+      );
+    }
+
+    // ─── SHARED HEADER WITH SYNC BADGE ───────────────────────────────────────
+    function ScreenHeader({ sub, title, meta, syncBadge, right }) {
+      return (
+        <div className="header">
+          <div style={{display:"flex", justifyContent:"space-between", alignItems:"flex-start"}}>
+            <div>
+              <div className="header-sub">{sub}</div>
+              <div className="header-title">{title}</div>
+              <div className="header-meta">{meta}</div>
+            </div>
+            {right && <div style={{flexShrink:0}}>{right}</div>}
+          </div>
+          {syncBadge && <div style={{marginTop:6}}>{syncBadge}</div>}
+        </div>
+      );
+    }
+
+    // ─── HOME SCREEN ─────────────────────────────────────────────────────────
+    function HomeScreen({ tasks, done, total, nextTask, lastMow, currentMonth, syncBadge }) {
+      const pct = Math.round(done/total*100);
+      const overdue = tasks.filter(t => !t.completed && t.sortMonth < currentMonth);
+      const daysSinceMow = lastMow
+        ? Math.floor((Date.now() - new Date(lastMow.date+"T12:00:00").getTime()) / 86400000)
+        : null;
+
+      const greeting = () => {
+        const h = new Date().getHours();
+        if (h < 12) return "Good morning";
+        if (h < 17) return "Good afternoon";
+        return "Good evening";
+      };
+
+      return (
+        <div>
+          <ScreenHeader sub={greeting()} title="Kunal's Lawn" meta="Concord, NC · Tall Fescue · Zone 7b" syncBadge={syncBadge} />
+
+          <div className="screen">
+            {/* Overdue alert */}
+            {overdue.length > 0 && (
+              <div style={{marginTop:16}}>
+                <div className="alert-banner fade-up">
+                  <div className="alert-title">⚠️ {overdue.length} Overdue {overdue.length===1?"Task":"Tasks"}</div>
+                  {overdue.map(t => <div key={t.id} className="alert-item">Step {t.step}: {t.title}</div>)}
+                </div>
+              </div>
+            )}
+
+            {/* Next task */}
+            {nextTask && (
+              <>
+                <div className="section-label" style={{marginTop: overdue.length?10:16}}>Up Next</div>
+                <div className="next-task-card fade-up">
+                  <div className="next-task-label">Step {nextTask.step}</div>
+                  <div className="next-task-title">{nextTask.emoji} {nextTask.title}</div>
+                  <div className="next-task-window">{nextTask.window}</div>
+                  <div className="next-task-badge">{nextTask.type}</div>
+                </div>
+              </>
+            )}
+
+            {/* Stats */}
+            <div className="section-label">Season Stats</div>
+            <div className="stat-grid fade-up">
+              <div className="stat-card">
+                <div className="stat-icon">📅</div>
+                <div className="stat-value">{done}/{total}</div>
+                <div className="stat-label">Steps Complete</div>
+                <div className="prog-track" style={{marginTop:8}}>
+                  <div className="prog-fill" style={{width:`${pct}%`}}></div>
+                </div>
+                <div className="stat-sub">{pct}% of 2026 plan</div>
+              </div>
+
+              <div className="stat-card">
+                <div className="stat-icon">🌿</div>
+                <div className="stat-value">{daysSinceMow !== null ? daysSinceMow : "—"}</div>
+                <div className="stat-label">{daysSinceMow !== null ? "Days Since Mow" : "No Mow Logged"}</div>
+                {lastMow && <div className="stat-sub">Deck at {lastMow.deckHeight}"</div>}
+              </div>
+
+              <div className="stat-card full">
+                <div style={{display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+                  <div>
+                    <div className="stat-icon">🎯</div>
+                    <div className="stat-value">{total-done}</div>
+                    <div className="stat-label">Steps Remaining in 2026</div>
+                  </div>
+                  <div style={{textAlign:"right"}}>
+                    <div style={{fontSize:11, color:"var(--text-muted)", fontWeight:600}}>Target Height</div>
+                    <div style={{fontSize:22, fontWeight:800, color:"var(--green-700)", marginTop:4}}>
+                      {currentMonth >= 6 && currentMonth <= 8 ? '4.0"' : currentMonth === 9 ? '3.0"' : '3.5"'}
+                    </div>
+                    <div style={{fontSize:10, color:"var(--text-muted)"}}>
+                      {currentMonth >= 6 && currentMonth <= 8 ? "Summer mode" : currentMonth===9?"Seeding prep":"Spring/Fall"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Troubleshooting quick tips */}
+            <div className="section-label">Quick Reference</div>
+            <div className="card fade-up" style={{padding:14}}>
+              {[
+                ["Yellowing in March", "Winter burn — clears after first mow + warmth"],
+                ["Weeds not bleaching", "Wait 14 days. Under 60°F, Mesotrione is very slow"],
+                ["Brown circles forming", "Brown Patch — apply DiseaseEx immediately"],
+                ["White tips after spray", "Cosmetic bleaching — grows out, not damaging"],
+              ].map(([issue, fix]) => (
+                <div key={issue} style={{borderBottom:"1px solid var(--warm-100)", paddingBottom:10, marginBottom:10}}>
+                  <div style={{fontSize:13, fontWeight:700, color:"var(--text-dark)"}}>{issue}</div>
+                  <div style={{fontSize:12, color:"var(--text-muted)", marginTop:2}}>{fix}</div>
+                </div>
+              ))}
+              <div>
+                <div style={{fontSize:13, fontWeight:700, color:"var(--text-dark)"}}>Bare spots in fall</div>
+                <div style={{fontSize:12, color:"var(--text-muted)", marginTop:2}}>Perfect — aerate and overseed in September</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── PLAN SCREEN ─────────────────────────────────────────────────────────
+    function PlanScreen({ tasks, toggleTask, currentMonth, syncBadge }) {
+      const [expanded, setExpanded] = useState(null);
+
+      const grouped = tasks.reduce((acc, t) => {
+        (acc[t.sortMonth] = acc[t.sortMonth] || []).push(t);
+        return acc;
+      }, {});
+
+      return (
+        <div>
+          <ScreenHeader sub="2026 Season" title="Care Plan" meta="Tap any step · Circle to mark done" syncBadge={syncBadge} />
+          <div className="screen" style={{paddingTop:16}}>
+            <div className="timeline">
+              {Object.entries(grouped).sort((a,b)=>a[0]-b[0]).map(([month, mTasks]) => {
+                const m = parseInt(month);
+                const isCurr = m === currentMonth;
+                const isPast = m <  currentMonth;
+                return (
+                  <div key={month}>
+                    <div className={`timeline-month ${isCurr?"current-month":""}`}>
+                      <span className={`month-pill ${isCurr ? "":"" }`} style={{
+                        background: isCurr ? "var(--green-700)" : isPast ? "var(--warm-200)" : "transparent",
+                        color: isCurr ? "white" : isPast ? "var(--text-muted)" : "var(--text-muted)",
+                        border: isCurr ? "none" : "1px solid var(--warm-200)",
+                      }}>
+                        {isCurr && <span style={{fontSize:9}}>▶ </span>}
+                        {MONTH_NAMES[m]}
+                      </span>
+                    </div>
+                    {mTasks.map(task => {
+                      const tc = TYPE_COLORS[task.type] || {bg:"#f3f4f6",text:"#374151"};
+                      const isExpanded = expanded === task.id;
+                      const isWarning = task.verified.startsWith("⚠️");
+                      return (
+                        <div key={task.id} className="timeline-entry">
+                          {/* Dot */}
+                          <div className="timeline-dot" style={{
+                            background: task.completed ? "var(--green-500)" : isCurr ? "var(--green-400)" : "var(--warm-200)",
+                            border: `2px solid ${task.completed ? "var(--green-400)" : "var(--warm-200)"}`,
+                          }}/>
+
+                          <div className={`entry-card ${task.completed?"done":""}`}
+                               onClick={() => setExpanded(isExpanded ? null : task.id)}>
+                            <div className="entry-header">
+                              {/* Check button — left side, never overlaps title */}
+                              <button className={`check-btn ${task.completed?"checked":""}`}
+                                style={{marginTop:2, flexShrink:0}}
+                                onClick={e => { e.stopPropagation(); toggleTask(task.id); }}>
+                                {task.completed && (
+                                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                    <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                                  </svg>
+                                )}
+                              </button>
+                              {/* Title block */}
+                              <div style={{flex:1, minWidth:0, marginLeft:10}}>
+                                <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", gap:6}}>
+                                  <div className="entry-step" style={{flex:1}}>Step {task.step} · {task.window}</div>
+                                  <span className="entry-badge" style={{background:tc.bg, color:tc.text, flexShrink:0}}>
+                                    {task.type}
+                                  </span>
+                                </div>
+                                <div className={`entry-title ${task.completed?"done-title":""}`} style={{marginTop:3}}>
+                                  <span style={{marginRight:5}}>{task.emoji}</span>{task.title}
+                                </div>
+                                {task.completed && task.completedDate && (
+                                  <div className="done-date">✓ Done {task.completedDate}</div>
+                                )}
+                              </div>
+                            </div>
+
+                            {isExpanded && (
+                              <div className="entry-expanded fade-up">
+                                <div className="entry-desc">{task.desc}</div>
+                                {task.notes && <div className="entry-note">{task.notes}</div>}
+                                <div className="entry-verified" style={{
+                                  background: isWarning ? "#fff7ed" : "var(--green-50)",
+                                  color: isWarning ? "#9a3412" : "var(--green-700)",
+                                }}>
+                                  🔍 {task.verified}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── MOW LOG SCREEN ──────────────────────────────────────────────────────
+    function LogScreen({ logs, setLogs, syncBadge }) {
+      const today = new Date().toISOString().split("T")[0];
+      const [showForm, setShowForm] = useState(false);
+      const [form, setForm] = useState({date:today, heightBefore:"", deckHeight:"", notes:""});
+      const set = (k,v) => setForm(p=>({...p,[k]:v}));
+
+      function submit(e) {
+        e.preventDefault();
+        if (!form.date || !form.deckHeight) return;
+        setLogs(prev => [{ ...form, id:Date.now() }, ...prev]);
+        setForm({date:today, heightBefore:"", deckHeight:"", notes:""});
+        setShowForm(false);
+      }
+      function del(id) {
+        if (window.confirm("Delete this entry?")) setLogs(prev=>prev.filter(l=>l.id!==id));
+      }
+
+      return (
+        <div>
+          <ScreenHeader sub={`${logs.length} Sessions`} title="Mowing Journal" meta="Track every cut of the season" syncBadge={syncBadge} />
+
+          <div className="screen" style={{paddingTop:16}}>
+            {/* Height guide */}
+            <div className="card" style={{padding:12, marginBottom:14, display:"flex", justifyContent:"space-around"}}>
+              {[["Spring/Fall","3.5\""],["Summer","4.0\""],["Post-Seed","3.0\""]].map(([lbl,h]) => (
+                <div key={lbl} style={{textAlign:"center"}}>
+                  <div style={{fontSize:20, fontWeight:800, color:"var(--green-700)"}}>{h}</div>
+                  <div style={{fontSize:10, color:"var(--text-muted)", fontWeight:500}}>{lbl}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Add button */}
+            <button className="btn-primary" style={{marginBottom:14}} onClick={() => setShowForm(!showForm)}>
+              {showForm ? "✕ Cancel" : "+ Log Mowing Session"}
+            </button>
+
+            {showForm && (
+              <form className="form-card fade-up" onSubmit={submit}>
+                <div style={{fontSize:14, fontWeight:700, marginBottom:12, color:"var(--text-dark)"}}>New Session</div>
+                <div className="form-grid">
+                  <div>
+                    <label className="form-label">Date *</label>
+                    <input type="date" className="form-input" value={form.date}
+                      onChange={e=>set("date",e.target.value)} required />
+                  </div>
+                  <div>
+                    <label className="form-label">Deck Height (") *</label>
+                    <input type="number" step="0.5" min="2" max="5.5" placeholder="3.5"
+                      className="form-input" value={form.deckHeight}
+                      onChange={e=>set("deckHeight",e.target.value)} required />
+                  </div>
+                  <div>
+                    <label className="form-label">Grass Before (")</label>
+                    <input type="number" step="0.25" min="2" max="9" placeholder="4.5"
+                      className="form-input" value={form.heightBefore}
+                      onChange={e=>set("heightBefore",e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="form-label">Notes</label>
+                    <input type="text" placeholder="e.g. Brown patch NE corner"
+                      className="form-input" value={form.notes}
+                      onChange={e=>set("notes",e.target.value)} />
+                  </div>
+                </div>
+                <button type="submit" className="btn-primary">Save Session</button>
+              </form>
+            )}
+
+            {logs.length === 0 ? (
+              <div className="empty">
+                <div className="empty-icon">🌿</div>
+                <div className="empty-title">No sessions yet</div>
+                <div className="empty-sub">Tap the button above after your first cut</div>
+              </div>
+            ) : (
+              logs.map(log => {
+                const pct = log.heightBefore && log.deckHeight
+                  ? Math.round(((parseFloat(log.heightBefore) - parseFloat(log.deckHeight)) / parseFloat(log.heightBefore)) * 100)
+                  : null;
+                const over = pct !== null && pct > 33;
+                const d = new Date(log.date + "T12:00:00");
+                return (
+                  <div key={log.id} className="mow-entry fade-up">
+                    <div className="mow-date-row">
+                      <div>
+                        <div className="mow-date">{d.toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</div>
+                        <div className="mow-weekday">{d.toLocaleDateString("en-US",{weekday:"long"})}</div>
+                      </div>
+                      <button onClick={()=>del(log.id)} style={{background:"none",border:"none",color:"#d1d5db",cursor:"pointer",fontSize:16}}>✕</button>
+                    </div>
+                    <div className="mow-stats">
+                      <div className="mow-stat">
+                        <div className="mow-stat-val">{log.deckHeight}"</div>
+                        <div className="mow-stat-lbl">Deck</div>
+                      </div>
+                      {log.heightBefore && (
+                        <div className="mow-stat">
+                          <div className="mow-stat-val">{log.heightBefore}"</div>
+                          <div className="mow-stat-lbl">Before</div>
+                        </div>
+                      )}
+                      {pct !== null && (
+                        <div className="mow-stat">
+                          <div className="mow-stat-val" style={{color: over ? "var(--red)" : "var(--green-600)"}}>{pct}%</div>
+                          <div className="mow-stat-lbl">Cut</div>
+                        </div>
+                      )}
+                    </div>
+                    {over && <div className="rule-warn">⚠️ Over 1/3 rule — mow more frequently to avoid this</div>}
+                    {pct !== null && !over && <div className="rule-ok">✅ Within the 1/3 rule</div>}
+                    {log.notes && <div style={{fontSize:12, color:"var(--text-muted)", fontStyle:"italic", marginTop:8}}>"{log.notes}"</div>}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ─── TOOLS SCREEN ────────────────────────────────────────────────────────
+    function ToolsScreen({ tasks, setTasks, setMowLogs,
+        ghToken, setGhToken, gistId, setGistId,
+        syncStatus, syncMsg, lastSynced,
+        setSyncStatus, setSyncMsg,
+        tasks_data, mowLogs_data, gistLoadedRef }) {
+
+      const [gallons, setGallons] = useState(1);
+      const bump = s => setGallons(g => Math.min(5, Math.max(0.5, parseFloat((g+s).toFixed(1)))));
+      const meso = (gallons*1).toFixed(gallons%1===0?0:1);
+      const surf = (gallons*3).toFixed(gallons%1===0?0:1);
+
+      // Gist setup local state
+      const [tokenInput, setTokenInput] = useState("");
+      const [setupError, setSetupError] = useState("");
+      const [setupLoading, setSetupLoading] = useState(false);
+
+      async function connectGist() {
+        const t = tokenInput.trim();
+        if (!isValidGhToken(t)) {
+          setSetupError("Token must start with ghp_, github_pat_, or gho_ and be a valid length.");
+          return;
+        }
+        setSetupError("");
+        setSetupLoading(true);
+        setSyncStatus("syncing");
+        setSyncMsg("Checking for existing Lawn Tracker Gist…");
+        try {
+          // First: look for an existing Lawn Tracker Gist in the account
+          const existingId = await gistFindExisting(t);
+
+          let resolvedId;
+          if (existingId) {
+            // Found one — load its data onto this device
+            setSyncMsg("Found existing Gist — loading your data…");
+            const data = await gistRead(t, existingId);
+            setTasks(data.tasks);
+            setMowLogs(data.mowLogs);
+            save("lawnTasks26", data.tasks);
+            save("mowLogs26",   data.mowLogs);
+            resolvedId = existingId;
+            setSyncMsg("Loaded from existing Gist ✓");
+          } else {
+            // No existing Gist — create a new one with current device data
+            setSyncMsg("No existing Gist found — creating new one…");
+            const data = { tasks: tasks_data, mowLogs: mowLogs_data, lastSaved: new Date().toISOString() };
+            resolvedId = await gistCreate(t, data);
+            setSyncMsg("Connected! New Gist created in your GitHub account.");
+          }
+
+          save("lawnGhToken", t);
+          save("lawnGistId",  resolvedId);
+          setGhToken(t);
+          setGistId(resolvedId);
+          setTokenInput("");
+          gistLoadedRef.current = true;
+          setLastSynced(new Date().toISOString());
+          save("lawnLastSynced", new Date().toISOString());
+          setSyncStatus("synced");
+        } catch(e) {
+          setSyncStatus("error");
+          setSyncMsg(e.message);
+          setSetupError(e.message);
+        } finally {
+          setSetupLoading(false);
+        }
+      }
+
+      function disconnectGist() {
+        if (!window.confirm("Disconnect GitHub sync? Your data stays saved locally but won't sync to other devices.")) return;
+        save("lawnGhToken", "");
+        save("lawnGistId",  "");
+        setGhToken("");
+        setGistId("");
+        gistLoadedRef.current = false;
+        setSyncStatus("idle");
+        setSyncMsg("");
+      }
+
+      async function manualSync() {
+        if (!ghToken || !gistId) return;
+        setSyncStatus("syncing");
+        setSyncMsg("Saving to GitHub…");
+        try {
+          await gistUpdate(ghToken, gistId, { tasks: tasks_data, mowLogs: mowLogs_data, lastSaved: new Date().toISOString() });
+          setSyncStatus("synced");
+          setSyncMsg("");
+          save("lawnLastSynced", new Date().toISOString());
+        } catch(e) {
+          setSyncStatus("error");
+          setSyncMsg(e.message);
+        }
+      }
+
+      function resetAll() {
+        if (window.confirm("Reset ALL tasks and mowing logs? This cannot be undone.")) {
+          setTasks(INITIAL_TASKS);
+          setMowLogs([]);
+        }
+      }
+
+      const lastSyncedStr = lastSynced
+        ? new Date(lastSynced).toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})
+        : null;
+
+      return (
+        <div>
+          <div className="header">
+            <div className="header-sub">Guides & Calculators</div>
+            <div className="header-title">Tools</div>
+            <div className="header-meta">Mesotrione recipe, temps, and more</div>
+          </div>
+
+          <div className="screen" style={{paddingTop:16}}>
+
+            {/* ── GitHub Gist Sync ── */}
+            <div className="section-label">☁ GitHub Sync</div>
+            {!ghToken || !gistId ? (
+              /* ── Not connected ── */
+              <div className="card fade-up" style={{padding:20, marginBottom:20}}>
+                <div style={{display:"flex", alignItems:"center", gap:10, marginBottom:12}}>
+                  <div style={{width:36, height:36, borderRadius:"50%", background:"var(--warm-100)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18}}>☁</div>
+                  <div>
+                    <div style={{fontSize:14, fontWeight:800, color:"var(--text-dark)"}}>Sync to Any Device</div>
+                    <div style={{fontSize:12, color:"var(--text-muted)"}}>Store progress in your free GitHub Gist</div>
+                  </div>
+                </div>
+                <div style={{fontSize:12, color:"var(--text-muted)", lineHeight:1.7, marginBottom:14}}>
+                  Connect a GitHub personal access token and your lawn data syncs automatically to a private Gist. Open this app on any device and your progress loads instantly.
+                </div>
+
+                <div style={{background:"var(--green-50)", border:"1px solid var(--green-100)", borderRadius:10, padding:12, marginBottom:14}}>
+                  <div style={{fontSize:12, fontWeight:700, color:"var(--green-700)", marginBottom:6}}>How to get a token:</div>
+                  <div style={{fontSize:12, color:"var(--text-mid)", lineHeight:1.9}}>
+                    1. Go to <strong>github.com → Settings → Developer settings</strong><br/>
+                    2. Click <strong>Personal access tokens → Tokens (classic)</strong><br/>
+                    3. Click <strong>Generate new token (classic)</strong><br/>
+                    4. Give it a name (e.g. "Lawn Tracker"), set expiry<br/>
+                    5. Check only the <strong>gist</strong> scope checkbox<br/>
+                    6. Click <strong>Generate token</strong> → copy it
+                  </div>
+                </div>
+
+                <label className="form-label">GitHub Personal Access Token</label>
+                <input
+                  type="password"
+                  className="form-input"
+                  placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                  value={tokenInput}
+                  onChange={e => { setTokenInput(e.target.value); setSetupError(""); }}
+                  onKeyDown={e => e.key === "Enter" && connectGist()}
+                  style={{marginBottom:10}}
+                />
+                {setupError && <div style={{fontSize:12, color:"var(--red)", marginBottom:8}}>⚠ {setupError}</div>}
+
+                <button
+                  className="btn-primary"
+                  onClick={connectGist}
+                  disabled={setupLoading || !tokenInput.trim()}
+                  style={{opacity: setupLoading||!tokenInput.trim() ? 0.6 : 1}}
+                >
+                  {setupLoading ? "Connecting…" : "Connect & Create Gist"}
+                </button>
+
+                <div style={{background:"#fef9c3", border:"1px solid #fde047", borderRadius:10, padding:"10px 12px", marginTop:12}}>
+                  <div style={{fontSize:12, fontWeight:700, color:"#713f12", marginBottom:4}}>🔐 Privacy note</div>
+                  <div style={{fontSize:11, color:"#78350f", lineHeight:1.6}}>
+                    Your token is stored only in your browser's localStorage. It is sent only to <strong>api.github.com</strong> to read/write your private Gist. Never share this app file with your token already entered.
+                    You can disconnect anytime.
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* ── Connected ── */
+              <div className="card fade-up" style={{padding:18, marginBottom:20, border:"2px solid var(--green-100)"}}>
+                <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12}}>
+                  <div style={{display:"flex", alignItems:"center", gap:10}}>
+                    <div style={{width:36, height:36, borderRadius:"50%", background:"var(--green-50)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18}}>✅</div>
+                    <div>
+                      <div style={{fontSize:14, fontWeight:800, color:"var(--green-700)"}}>GitHub Sync Active</div>
+                      <div style={{fontSize:11, color:"var(--text-muted)", fontFamily:"monospace"}}>
+                        Gist: {gistId.slice(0,8)}…{gistId.slice(-4)}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4}}>
+                    {syncStatus === "syncing" && <span style={{fontSize:11, color:"var(--green-600)", fontWeight:600}}>⟳ Syncing…</span>}
+                    {syncStatus === "synced"  && <span style={{fontSize:11, color:"var(--green-600)", fontWeight:600}}>✓ Synced</span>}
+                    {syncStatus === "error"   && <span style={{fontSize:11, color:"var(--red)", fontWeight:600}}>⚠ Error</span>}
+                    {syncStatus === "pending" && <span style={{fontSize:11, color:"var(--text-muted)"}}>Saving…</span>}
+                  </div>
+                </div>
+
+                {syncMsg && syncStatus === "error" && (
+                  <div style={{background:"#fef2f2", border:"1px solid #fecaca", borderRadius:8, padding:"8px 12px", fontSize:12, color:"var(--red)", marginBottom:12}}>
+                    {syncMsg}
+                  </div>
+                )}
+                {syncMsg && syncStatus === "synced" && syncMsg !== "" && (
+                  <div style={{background:"var(--green-50)", border:"1px solid var(--green-100)", borderRadius:8, padding:"8px 12px", fontSize:12, color:"var(--green-700)", marginBottom:12}}>
+                    {syncMsg}
+                  </div>
+                )}
+
+                <div style={{display:"flex", gap:12, flexDirection:"column"}}>
+                  <div style={{display:"flex", gap:8, alignItems:"center"}}>
+                    <div style={{flex:1, background:"var(--warm-100)", borderRadius:8, padding:"8px 12px"}}>
+                      <div style={{fontSize:10, fontWeight:700, color:"var(--text-muted)", textTransform:"uppercase", letterSpacing:"0.05em"}}>Last Synced</div>
+                      <div style={{fontSize:12, color:"var(--text-dark)", marginTop:2}}>
+                        {lastSyncedStr || "Not yet synced this session"}
+                      </div>
+                    </div>
+                    <button
+                      onClick={manualSync}
+                      disabled={syncStatus === "syncing"}
+                      style={{
+                        background: syncStatus==="syncing" ? "var(--warm-200)" : "var(--green-700)",
+                        color: syncStatus==="syncing" ? "var(--text-muted)" : "white",
+                        border:"none", borderRadius:10, padding:"10px 16px",
+                        fontSize:13, fontWeight:700, cursor: syncStatus==="syncing" ? "default" : "pointer",
+                        flexShrink:0
+                      }}
+                    >
+                      {syncStatus === "syncing" ? "⟳ Saving…" : "⬆ Sync Now"}
+                    </button>
+                  </div>
+
+                  <div style={{borderTop:"1px solid var(--warm-100)", paddingTop:10, display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+                    <div style={{fontSize:12, color:"var(--text-muted)"}}>Auto-saves 3 seconds after any change</div>
+                    <button onClick={disconnectGist}
+                      style={{background:"none", border:"none", fontSize:12, color:"#9ca3af", textDecoration:"underline", cursor:"pointer"}}>
+                      Disconnect
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Calculator */}
+            <div className="section-label">Mesotrione Mix Calculator</div>
+            <div className="card tool-section fade-up" style={{padding:16}}>
+              <div style={{fontSize:13, color:"var(--text-muted)", marginBottom:4}}>How many gallons?</div>
+              <div className="calc-stepper">
+                <button className="stepper-btn" onClick={()=>bump(-0.5)}>−</button>
+                <div>
+                  <span className="stepper-val">{gallons}</span>
+                  <span className="stepper-unit"> gal</span>
+                </div>
+                <button className="stepper-btn" onClick={()=>bump(0.5)}>+</button>
+              </div>
+              <div className="ing-row">
+                <div><span style={{marginRight:8}}>🌿</span><span className="ing-name">Mesotrione</span></div>
+                <div className="ing-amount">{meso} tsp</div>
+              </div>
+              <div className="ing-row">
+                <div><span style={{marginRight:8}}>💧</span><span className="ing-name">Surfactant</span></div>
+                <div className="ing-amount">{surf} tsp</div>
+              </div>
+              <div className="ing-row">
+                <div><span style={{marginRight:8}}>🔵</span><span className="ing-name">Blue Dye</span></div>
+                <div className="ing-amount">few drops</div>
+              </div>
+              <div className="ing-row">
+                <div><span style={{marginRight:8}}>💦</span><span className="ing-name">Water</span></div>
+                <div className="ing-amount">{gallons} gal</div>
+              </div>
+              <div style={{background:"#fef2f2", borderRadius:10, padding:"10px 12px", marginTop:8, fontSize:12, color:"var(--red)", fontWeight:600}}>
+                ⚠️ During September overseeding: NO surfactant — kills germinating seedlings
+              </div>
+            </div>
+
+            {/* Temperature guide */}
+            <div className="section-label">Effectiveness by Temperature</div>
+            <div className="card tool-section fade-up" style={{padding:16}}>
+              {[
+                ["Below 60°F","Very slow — weeds may take 2+ weeks. Don't re-spray.","#eff6ff","#1e40af","#3b82f6"],
+                ["60–75°F","Good. Weeds bleach white in 7–10 days.","#f0fdf4","#166534","#22c55e"],
+                ["75–85°F","Optimal. Weeds respond in 5–7 days.","#fefce8","#713f12","#f59e0b"],
+                ["Above 90°F","Risk of tip bleaching on fescue — cosmetic, grows out.","#fef2f2","#991b1b","#ef4444"],
+              ].map(([range, effect, bg, text, border]) => (
+                <div key={range} className="temp-row" style={{background:bg, color:text, borderColor:border}}>
+                  <div className="temp-range">{range}</div>
+                  <div className="temp-effect" style={{opacity:0.8}}>{effect}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* When to use */}
+            <div className="section-label">When to Use What</div>
+            <div className="card tool-section fade-up" style={{padding:16}}>
+              {[
+                ["🌿 Spring/Summer","Meso + Surfactant + Blue Dye"],
+                ["🌱 September seeding","Meso + Blue Dye only (no surfactant)"],
+                ["🚫 Never spray when","Rain in 24 hrs · Temps below 50°F · Wet grass blades"],
+              ].map(([label, val]) => (
+                <div key={label} style={{paddingBottom:10, marginBottom:10, borderBottom:"1px solid var(--warm-100)"}}>
+                  <div style={{fontSize:13, fontWeight:700, color:"var(--text-dark)"}}>{label}</div>
+                  <div style={{fontSize:12, color:"var(--text-muted)", marginTop:2}}>{val}</div>
+                </div>
+              ))}
+              <div>
+                <div style={{fontSize:13, fontWeight:700, color:"var(--text-dark)"}}>💡 Remember</div>
+                <div style={{fontSize:12, color:"var(--text-muted)", marginTop:2}}>Blue dye tracks where you've sprayed. Always use it.</div>
+              </div>
+            </div>
+
+            {/* ── Disease Guide ── */}
+            <div className="section-label" style={{marginTop:24}}>Lawn Disease Guide</div>
+            <div style={{background:"var(--green-50)", border:"1px solid var(--green-100)", borderRadius:12, padding:"10px 14px", marginBottom:12}}>
+              <div style={{fontSize:12, color:"var(--green-700)", fontWeight:500, lineHeight:1.5}}>
+                These are the 4 diseases most likely to affect your Tall Fescue in Concord, NC. Tap each for identification tips and treatment.
+              </div>
+            </div>
+            <DiseaseGuide />
+
+            {/* Reset */}
+            <div style={{textAlign:"center", marginTop:24, paddingBottom:16}}>
+              <button onClick={resetAll} style={{background:"none",border:"none",fontSize:12,color:"#9ca3af",textDecoration:"underline",cursor:"pointer"}}>
+                Reset all data
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── DISEASE GUIDE ────────────────────────────────────────────────────────
+    const DISEASES = [
+      {
+        id:"brownpatch",
+        name:"Brown Patch",
+        risk:"HIGH — Very Common in Concord",
+        riskColor:"#991b1b", riskBg:"#fee2e2",
+        pathogen:"Rhizoctonia solani",
+        season:"June – September",
+        triggerTemp:"Night temps > 70°F",
+        triggerHumid:"Relative humidity > 90%",
+        triggerOther:"Leaf wetness > 10 hours; high nitrogen in summer",
+        looksLike:"Circular patches from 6 inches to several feet wide. Light tan/brown color. Dark brown 'smoke ring' border visible in early morning dew. In newer Tall Fescue varieties, may appear as uniform wilted/drought-like blighting without clear circles.",
+        onBlades:"Irregular tan lesions on individual blades with dark brown borders.",
+        earlySign:"White cottony mycelium between blades in early morning dew.",
+        doNow:"Apply Scotts DiseaseEx or a propiconazole fungicide immediately. Stop watering at night — switch to early morning only. Do not fertilize.",
+        prevent:"Apply DiseaseEx preventively in mid-June before night temps hit 70°F. Raise mower to 4.0\" in summer. Water early morning only. Avoid excess nitrogen.",
+        learnMore:"https://extension.psu.edu/turfgrass-diseases-brown-patch-causal-fungus-rhizoctonia-solani",
+        learnLabel:"Penn State Extension — Brown Patch Guide",
+        svgPattern: (
+          <svg width="70" height="55" viewBox="0 0 70 55">
+            <rect width="70" height="55" fill="#4ade80" rx="6"/>
+            <circle cx="20" cy="20" r="12" fill="#a16207" opacity="0.85"/>
+            <circle cx="20" cy="20" r="9" fill="#d97706" opacity="0.7"/>
+            <circle cx="50" cy="15" r="8" fill="#a16207" opacity="0.8"/>
+            <circle cx="50" cy="15" r="5.5" fill="#d97706" opacity="0.65"/>
+            <circle cx="35" cy="40" r="10" fill="#a16207" opacity="0.75"/>
+            <circle cx="35" cy="40" r="7" fill="#d97706" opacity="0.6"/>
+            <text x="35" y="53" textAnchor="middle" fontSize="7" fill="white" fontWeight="bold" opacity="0.9">Brown Patch</text>
+          </svg>
+        )
+      },
+      {
+        id:"grayleafspot",
+        name:"Gray Leaf Spot",
+        risk:"MEDIUM-HIGH — Increasing in NC",
+        riskColor:"#92400e", riskBg:"#fff7ed",
+        pathogen:"Pyricularia grisea",
+        season:"July – September",
+        triggerTemp:"Night temps > 72°F",
+        triggerHumid:"Leaf wetness > 12 hours",
+        triggerOther:"Hot humid stretches in July/August; low mowing height",
+        looksLike:"Orange to yellow patches 4–12 inches across that rapidly merge into large irregular damaged areas. Blades appear matted, greasy, and water-soaked. Often mistaken for drought stress or Pythium.",
+        onBlades:"Oval gray spots in center with a darker border. Blades die back from the tip when spots girdle the leaf.",
+        earlySign:"Fuzzy gray coloring on wet blades in morning — profuse spore production.",
+        doNow:"Apply a pre-mix fungicide with DMI + QoI (e.g., Headway, Pillar G). QoI alone only gives ~50% control. Collect clippings when mowing to reduce spread.",
+        prevent:"Start preventive fungicide program in mid-June to early July on 14–21 day intervals. Maintain 3.5\" mowing height. Keep nitrogen below ¼ lb per 1,000 sq ft per application in summer.",
+        learnMore:"https://turfpathology.ces.ncsu.edu/2020/09/struggling-with-gray-leaf-spot-in-tall-fescue/",
+        learnLabel:"NC State Turf Pathology — Gray Leaf Spot in Tall Fescue",
+        svgPattern: (
+          <svg width="70" height="55" viewBox="0 0 70 55">
+            <rect width="70" height="55" fill="#4ade80" rx="6"/>
+            {[5,14,23,32,41,50,59].map((x,i) => (
+              <g key={x}>
+                <rect x={x} y={6+i%3*4} width="3" height="18" fill={i%2===0?"#65a30d":"#4ade80"} rx="1"/>
+                {[10,20,30].map(y => (
+                  <ellipse key={y} cx={x+1.5} cy={y} rx="3" ry="2" fill="#9a3412" opacity="0.75"/>
+                ))}
+              </g>
+            ))}
+            <text x="35" y="52" textAnchor="middle" fontSize="7" fill="white" fontWeight="bold" opacity="0.9">Gray Leaf Spot</text>
+          </svg>
+        )
+      },
+      {
+        id:"pythiumblight",
+        name:"Pythium Blight",
+        risk:"MEDIUM — Severe When It Hits",
+        riskColor:"#1e3a5f", riskBg:"#eff6ff",
+        pathogen:"Pythium spp.",
+        season:"June – August",
+        triggerTemp:"Day temps > 85°F + night > 68°F",
+        triggerHumid:"Waterlogged soil; > 95% humidity",
+        triggerOther:"Extremely wet or poorly drained areas; spreads along water drainage paths",
+        looksLike:"Small sunken circular patches up to 1 foot across. Blades look water-soaked, orange or dark gray, and greasy. Spreads in streaks along mowing direction or drainage flow.",
+        onBlades:"Water-soaked, greasy, matted appearance. Blades collapse and turn orange-gray.",
+        earlySign:"Gray or white cottony mycelium very visible in early morning on wet grass. This is the clearest identifier.",
+        doNow:"Improve drainage immediately. Apply Subdue MAXX (mefenoxam) or fosetyl-aluminum fungicide. Do not mow across affected area — spreads spores. Let area dry out.",
+        prevent:"Improve drainage in low-lying areas. Avoid evening watering. Do not over-apply nitrogen. Pythium is rare in well-drained lawns.",
+        learnMore:"https://www.canr.msu.edu/ipm/diseases/pythium-blight",
+        learnLabel:"Michigan State Extension — Pythium Blight Guide",
+        svgPattern: (
+          <svg width="70" height="55" viewBox="0 0 70 55">
+            <rect width="70" height="55" fill="#4ade80" rx="6"/>
+            <ellipse cx="22" cy="25" rx="14" ry="10" fill="#94a3b8" opacity="0.8"/>
+            <ellipse cx="22" cy="25" rx="10" ry="7" fill="#64748b" opacity="0.7"/>
+            <ellipse cx="48" cy="30" rx="10" ry="7" fill="#94a3b8" opacity="0.75"/>
+            <ellipse cx="48" cy="30" rx="6" ry="4.5" fill="#64748b" opacity="0.65"/>
+            {/* Cottony wisps */}
+            {[10,16,22,28,34,40,46,52].map(x => (
+              <circle key={x} cx={x} cy={25+Math.sin(x)*4} r="2.5" fill="white" opacity="0.45"/>
+            ))}
+            <text x="35" y="52" textAnchor="middle" fontSize="7" fill="white" fontWeight="bold" opacity="0.9">Pythium Blight</text>
+          </svg>
+        )
+      },
+      {
+        id:"dollarspot",
+        name:"Dollar Spot",
+        risk:"LOW — Tall Fescue is Resistant",
+        riskColor:"#065f46", riskBg:"#ecfdf5",
+        pathogen:"Sclerotinia homoeocarpa",
+        season:"May – October (peaks spring/fall)",
+        triggerTemp:"60–85°F days + cool nights",
+        triggerHumid:"High humidity; dew on blades > 10 hours",
+        triggerOther:"Low nitrogen; drought stress; cool nights",
+        looksLike:"Silver-dollar-sized tan spots 2–6 inches wide on the lawn surface. Multiple spots merge into large irregular patches. Tan straw color throughout the spot.",
+        onBlades:"Yellowish water-soaked spots with reddish-brown borders. Hourglass shape on individual blades.",
+        earlySign:"White cobweb-like mycelium between grass blades in early morning dew — a very distinctive identifier.",
+        doNow:"Fertilize lightly with nitrogen (Tall Fescue low-N is a trigger). Apply propiconazole or myclobutanil fungicide. Improve air circulation.",
+        prevent:"Maintain adequate nitrogen levels (not zero in summer). Tall Fescue has good natural resistance. Dollar Spot is far less of a concern than Brown Patch for your lawn.",
+        learnMore:"https://extension.okstate.edu/fact-sheets/dollar-spot-of-turfgrass.html",
+        learnLabel:"Oklahoma State Extension — Dollar Spot Guide",
+        svgPattern: (
+          <svg width="70" height="55" viewBox="0 0 70 55">
+            <rect width="70" height="55" fill="#4ade80" rx="6"/>
+            {[[12,15],[35,12],[55,20],[20,38],[45,40],[30,28]].map(([cx,cy],i) => (
+              <g key={i}>
+                <circle cx={cx} cy={cy} r="7" fill="#d4a017" opacity="0.8"/>
+                <circle cx={cx} cy={cy} r="4.5" fill="#f5c842" opacity="0.6"/>
+              </g>
+            ))}
+            <text x="35" y="53" textAnchor="middle" fontSize="7" fill="white" fontWeight="bold" opacity="0.9">Dollar Spot</text>
+          </svg>
+        )
+      },
+    ];
+
+    function DiseaseGuide() {
+      const [open, setOpen] = useState(null);
+      return (
+        <div style={{marginBottom:14}}>
+          {DISEASES.map(d => {
+            const isOpen = open === d.id;
+            return (
+              <div key={d.id} className="card" style={{marginBottom:10}}>
+                {/* Header row */}
+                <div style={{padding:"14px 14px 12px", cursor:"pointer"}}
+                     onClick={() => setOpen(isOpen ? null : d.id)}>
+                  <div style={{display:"flex", alignItems:"flex-start", gap:12}}>
+                    {/* SVG visual */}
+                    <div style={{flexShrink:0, borderRadius:8, overflow:"hidden", boxShadow:"0 2px 6px rgba(0,0,0,0.12)"}}>
+                      {d.svgPattern}
+                    </div>
+                    {/* Info */}
+                    <div style={{flex:1, minWidth:0}}>
+                      <div style={{fontSize:15, fontWeight:800, color:"var(--text-dark)", lineHeight:1.2}}>{d.name}</div>
+                      <div style={{fontSize:10, color:"var(--text-muted)", fontStyle:"italic", marginTop:2}}>{d.pathogen}</div>
+                      <div style={{
+                        display:"inline-block", marginTop:6,
+                        background:d.riskBg, color:d.riskColor,
+                        fontSize:10, fontWeight:700, padding:"3px 8px", borderRadius:20
+                      }}>{d.risk}</div>
+                      <div style={{fontSize:11, color:"var(--text-muted)", marginTop:4}}>📅 Season: {d.season}</div>
+                    </div>
+                    <div style={{fontSize:12, color:"var(--text-muted)", flexShrink:0}}>{isOpen ? "▲" : "▼"}</div>
+                  </div>
+                </div>
+
+                {isOpen && (
+                  <div className="fade-up" style={{borderTop:"1px solid var(--warm-100)", padding:"14px 14px 16px"}}>
+
+                    {/* Trigger conditions */}
+                    <div style={{marginBottom:12}}>
+                      <div style={{fontSize:12, fontWeight:700, color:"var(--text-dark)", marginBottom:6}}>⚡ Trigger Conditions</div>
+                      <div style={{display:"flex", flexDirection:"column", gap:5}}>
+                        {[
+                          ["🌡️ Temperature", d.triggerTemp],
+                          ["💧 Humidity", d.triggerHumid],
+                          ["⚠️ Watch for", d.triggerOther],
+                        ].map(([label, val]) => (
+                          <div key={label} style={{background:"var(--cream)", borderRadius:8, padding:"7px 10px", fontSize:12}}>
+                            <span style={{fontWeight:700, color:"var(--text-dark)"}}>{label}:</span>
+                            <span style={{color:"var(--text-muted)", marginLeft:4}}>{val}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* What it looks like */}
+                    <div style={{marginBottom:12}}>
+                      <div style={{fontSize:12, fontWeight:700, color:"var(--text-dark)", marginBottom:6}}>🔍 What It Looks Like</div>
+                      <div style={{fontSize:12, color:"var(--text-mid)", lineHeight:1.6, marginBottom:6}}>{d.looksLike}</div>
+                      <div style={{background:"#fffbeb", border:"1px solid #fde68a", borderRadius:8, padding:"8px 10px"}}>
+                        <div style={{fontSize:11, fontWeight:700, color:"#92400e", marginBottom:3}}>On individual blades:</div>
+                        <div style={{fontSize:12, color:"#92400e"}}>{d.onBlades}</div>
+                      </div>
+                      <div style={{background:"var(--green-50)", border:"1px solid var(--green-100)", borderRadius:8, padding:"8px 10px", marginTop:6}}>
+                        <div style={{fontSize:11, fontWeight:700, color:"var(--green-700)", marginBottom:3}}>Early warning sign:</div>
+                        <div style={{fontSize:12, color:"var(--green-700)"}}>{d.earlySign}</div>
+                      </div>
+                    </div>
+
+                    {/* Treatment */}
+                    <div style={{marginBottom:12}}>
+                      <div style={{fontSize:12, fontWeight:700, color:"var(--text-dark)", marginBottom:6}}>💊 Treatment & Prevention</div>
+                      <div style={{background:"#fef2f2", border:"1px solid #fecaca", borderRadius:8, padding:"8px 10px", marginBottom:6}}>
+                        <div style={{fontSize:11, fontWeight:700, color:"#991b1b", marginBottom:3}}>If you see it NOW:</div>
+                        <div style={{fontSize:12, color:"#991b1b", lineHeight:1.5}}>{d.doNow}</div>
+                      </div>
+                      <div style={{background:"var(--cream)", borderRadius:8, padding:"8px 10px"}}>
+                        <div style={{fontSize:11, fontWeight:700, color:"var(--text-muted)", marginBottom:3}}>Prevention:</div>
+                        <div style={{fontSize:12, color:"var(--text-mid)", lineHeight:1.5}}>{d.prevent}</div>
+                      </div>
+                    </div>
+
+                    {/* Learn more */}
+                    <a href={d.learnMore} target="_blank" rel="noopener noreferrer"
+                       style={{
+                         display:"flex", alignItems:"center", justifyContent:"space-between",
+                         background:"var(--green-800)", color:"white",
+                         borderRadius:10, padding:"10px 14px", textDecoration:"none",
+                         fontSize:12, fontWeight:600
+                       }}>
+                      <span>📚 {d.learnLabel}</span>
+                      <span style={{opacity:0.7}}>↗</span>
+                    </a>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // ─── PRODUCTS SCREEN ─────────────────────────────────────────────────────
+    const PRODUCTS = [
+      {
+        id:"halts", name:"Scotts Halts Crabgrass Preventer",
+        steps:[1], when:"Buy Jan–Feb", season:"Winter/Early Spring",
+        where:"Home Depot, Lowe's, Amazon", approxCost:"$25–$35",
+        notes:"Step 1 of Scotts 4-Step. Apply before soil temps hit 55°F. One bag covers ~5,000 sq ft.",
+        tags:["Pre-Emergent","Crabgrass"], emoji:"🌱", color:"#dbeafe", tcolor:"#1e40af"
+      },
+      {
+        id:"weedfeed", name:"Scotts Turf Builder (No Weed Control)",
+        steps:[5], when:"Buy March–April", season:"Spring",
+        where:"Home Depot, Lowe's, Walmart", approxCost:"$25–$40",
+        notes:"Use at HALF rate in spring. No weed control mixed in — handle weeds separately with Mesotrione spot spray. Avoid Weed & Feed on Tall Fescue.",
+        tags:["Fertilizer"], emoji:"🌾", color:"#dcfce7", tcolor:"#166534"
+      },
+      {
+        id:"soiltest", name:"Soil Test Kit (Cabarrus Extension)",
+        steps:[4], when:"Pick up anytime, submit after Apr 1", season:"Spring",
+        where:"715 Cabarrus Ave W, Concord NC 28025", approxCost:"FREE after Apr 1",
+        notes:"Free NC State test. Take two samples: front yard + backyard separately. Results in ~2 weeks.",
+        tags:["Soil Test"], emoji:"🧪", color:"#fef9c3", tcolor:"#713f12"
+      },
+      {
+        id:"lime", name:"Pennington Pelletized Lime",
+        steps:[7], when:"Buy April–May (after soil test)", season:"Spring",
+        where:"Home Depot, Lowe's, Tractor Supply", approxCost:"$12–$18 / 40 lb bag",
+        notes:"Only buy IF soil test shows pH below 6.0. One 40 lb bag covers ~1,000 sq ft. Pelletized is faster and cleaner than ag lime.",
+        tags:["Lime","pH Adjustment"], emoji:"🪨", color:"#ffedd5", tcolor:"#9a3412"
+      },
+      {
+        id:"mesotrione", name:"Tenacity (Mesotrione) Herbicide",
+        steps:[9,14], when:"Buy March–April, use all season", season:"Spring – Fall",
+        where:"Home Depot, Amazon, SiteOne", approxCost:"$50–$60 / 8 oz bottle",
+        notes:"8 oz bottle makes 80+ gallons. Use 1 tsp per gallon. Works on crabgrass, clover, nutsedge, and more. During overseeding, use WITHOUT surfactant.",
+        tags:["Herbicide","Mesotrione"], emoji:"🧴", color:"#fee2e2", tcolor:"#991b1b"
+      },
+      {
+        id:"surfactant", name:"Surfactant (Liquid Non-Ionic)",
+        steps:[9], when:"Buy with Mesotrione", season:"Spring – Summer",
+        where:"Amazon, SiteOne, Helena Agri", approxCost:"$15–$20 / qt",
+        notes:"Use 3 tsp per gallon with Mesotrione for spring/summer sprays. Do NOT use during September overseeding.",
+        tags:["Surfactant"], emoji:"💧", color:"#f3e8ff", tcolor:"#6b21a8"
+      },
+      {
+        id:"bluedye", name:"Blue Spray Indicator Dye",
+        steps:[9,14], when:"Buy with Mesotrione", season:"All Season",
+        where:"Amazon, SiteOne", approxCost:"$10–$15",
+        notes:"Add a few drops per gallon to see where you've sprayed. Fades in 24–48 hrs. Essential for avoiding double-spray.",
+        tags:["Dye","Tracker"], emoji:"🔵", color:"#e0f2fe", tcolor:"#075985"
+      },
+      {
+        id:"diseaseex", name:"Scotts DiseaseEx Fungicide",
+        steps:[10], when:"Buy May–June, apply before first 90°F week", season:"Early Summer",
+        where:"Home Depot, Lowe's, Amazon", approxCost:"$25–$35",
+        notes:"Prevents Brown Patch. Apply before night temps hit 70°F + humidity. One application lasts ~4 weeks.",
+        tags:["Fungicide","Brown Patch"], emoji:"🍄", color:"#f3e8ff", tcolor:"#6b21a8"
+      },
+      {
+        id:"seed", name:"Turf-Type Tall Fescue Blend Seed",
+        steps:[13], when:"Buy August (watch for sales)", season:"Fall",
+        where:"Home Depot, Lowe's, SiteOne, Natures Lawn & Garden", approxCost:"$50–$80 / 25 lb bag",
+        notes:"Get a named blend with multiple cultivars (not a single variety). Brands: Jonathan Green Black Beauty, Pennington Smart Seed, or SiteOne bag. Avoid cheap box store blends.",
+        tags:["Seed","Tall Fescue"], emoji:"🌱", color:"#ccfbf1", tcolor:"#065f46"
+      },
+      {
+        id:"starter", name:"Scotts Starter Food for New Grass",
+        steps:[13], when:"Buy with seed", season:"Fall",
+        where:"Home Depot, Lowe's, Walmart", approxCost:"$20–$30",
+        notes:"Apply immediately after seeding. Promotes fast root establishment. Do NOT use regular fertilizer — it burns new seedlings.",
+        tags:["Starter Fertilizer"], emoji:"🌿", color:"#dcfce7", tcolor:"#166534"
+      },
+      {
+        id:"aerator", name:"Core Aerator (Rental)",
+        steps:[13], when:"Rent first week of September", season:"Fall",
+        where:"Home Depot Tool Rental, Sunbelt Rentals", approxCost:"$80–$120 / day",
+        notes:"Reserve early — they sell out in September. Plug/core aerator only (not spike). Pull 2–4\" plugs, 3\" apart. Leave plugs on lawn — they break down.",
+        tags:["Equipment","Aeration"], emoji:"🔧", color:"#fef9c3", tcolor:"#713f12"
+      },
+      {
+        id:"winterguard", name:"Scotts WinterGuard (Step 4)",
+        steps:[16], when:"Buy October–November", season:"Fall",
+        where:"Home Depot, Lowe's, Walmart", approxCost:"$25–$40",
+        notes:"Step 4 of Scotts 4-Step. High potassium formula feeds roots for winter survival and spring green-up. Apply before first hard freeze.",
+        tags:["Fertilizer","Winter"], emoji:"❄️", color:"#dbeafe", tcolor:"#1e40af"
+      },
+    ];
+
+    const SEASONS = ["Winter/Early Spring","Spring","Early Summer","Spring – Summer","Spring – Fall","All Season","Fall"];
+
+    function ProductsScreen() {
+      const [filter, setFilter] = useState("all");
+      const [expanded, setExpanded] = useState(null);
+      const seasonFilters = ["all", "Spring", "Summer", "Fall"];
+
+      const filtered = filter === "all" ? PRODUCTS
+        : PRODUCTS.filter(p => p.season.toLowerCase().includes(filter.toLowerCase()));
+
+      const totalCostMin = PRODUCTS.filter(p => p.approxCost !== "FREE after Apr 1")
+        .reduce((s, p) => {
+          const m = p.approxCost.match(/\$(\d+)/);
+          return s + (m ? parseInt(m[1]) : 0);
+        }, 0);
+
+      return (
+        <div>
+          <div className="header">
+            <div className="header-sub">{PRODUCTS.length} Products · 2026 Season</div>
+            <div className="header-title">Product List</div>
+            <div className="header-meta">Everything you need, when to buy it</div>
+          </div>
+
+          <div className="screen" style={{paddingTop:16}}>
+            {/* Total cost estimate */}
+            <div className="card fade-up" style={{padding:14, marginBottom:14, display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+              <div>
+                <div style={{fontSize:11, color:"var(--text-muted)", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.05em"}}>Estimated Season Budget</div>
+                <div style={{fontSize:28, fontWeight:800, color:"var(--green-700)", marginTop:2}}>~${totalCostMin}+</div>
+                <div style={{fontSize:11, color:"var(--text-muted)"}}>Excludes aerator rental + soil test (free)</div>
+              </div>
+              <div style={{fontSize:40}}>🛒</div>
+            </div>
+
+            {/* Season filter */}
+            <div style={{display:"flex", gap:8, marginBottom:14, overflowX:"auto", paddingBottom:4}}>
+              {seasonFilters.map(s => (
+                <button key={s} onClick={() => setFilter(s)}
+                  style={{
+                    background: filter===s ? "var(--green-700)" : "var(--white)",
+                    color: filter===s ? "white" : "var(--text-muted)",
+                    border: `1.5px solid ${filter===s ? "var(--green-700)" : "var(--warm-200)"}`,
+                    borderRadius:20, padding:"6px 14px", fontSize:12, fontWeight:700,
+                    cursor:"pointer", whiteSpace:"nowrap", transition:"all 0.15s"
+                  }}>
+                  {s === "all" ? "All Products" : s}
+                </button>
+              ))}
+            </div>
+
+            {/* Product cards */}
+            {filtered.map(p => {
+              const isOpen = expanded === p.id;
+              return (
+                <div key={p.id} className="card fade-up" style={{marginBottom:10, overflow:"visible"}}>
+                  <div style={{padding:"14px 14px 12px", cursor:"pointer"}} onClick={() => setExpanded(isOpen ? null : p.id)}>
+                    <div style={{display:"flex", alignItems:"flex-start", gap:10}}>
+                      <div style={{fontSize:28, flexShrink:0, marginTop:2}}>{p.emoji}</div>
+                      <div style={{flex:1, minWidth:0}}>
+                        <div style={{fontSize:14, fontWeight:700, color:"var(--text-dark)", lineHeight:1.3}}>{p.name}</div>
+                        <div style={{display:"flex", gap:6, flexWrap:"wrap", marginTop:5}}>
+                          {p.tags.map(t => (
+                            <span key={t} style={{
+                              background:p.color, color:p.tcolor,
+                              fontSize:10, fontWeight:700, padding:"2px 8px",
+                              borderRadius:20, border:`1px solid ${p.color}`
+                            }}>{t}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <div style={{flexShrink:0, textAlign:"right"}}>
+                        <div style={{fontSize:14, fontWeight:800, color:"var(--green-700)"}}>{p.approxCost}</div>
+                        <div style={{fontSize:10, color:"var(--text-muted)", marginTop:2}}>{isOpen?"▲":"▼"}</div>
+                      </div>
+                    </div>
+
+                    {/* When & Where always visible */}
+                    <div style={{display:"flex", gap:8, marginTop:10, flexWrap:"wrap"}}>
+                      <div style={{background:"var(--cream)", borderRadius:8, padding:"5px 10px", fontSize:11, color:"var(--text-muted)", fontWeight:500}}>
+                        📅 {p.when}
+                      </div>
+                      <div style={{background:"var(--cream)", borderRadius:8, padding:"5px 10px", fontSize:11, color:"var(--text-muted)", fontWeight:500}}>
+                        📍 {p.where.split(",")[0]}
+                      </div>
+                    </div>
+                  </div>
+
+                  {isOpen && (
+                    <div className="fade-up" style={{borderTop:"1px solid var(--warm-100)", padding:"12px 14px 14px"}}>
+                      <div style={{fontSize:13, color:"var(--text-mid)", lineHeight:1.6, marginBottom:10}}>{p.notes}</div>
+                      <div style={{background:"var(--cream)", borderRadius:10, padding:"10px 12px"}}>
+                        <div style={{fontSize:11, fontWeight:700, color:"var(--text-muted)", textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:6}}>Where to Buy</div>
+                        <div style={{fontSize:12, color:"var(--text-dark)", fontWeight:500}}>{p.where}</div>
+                      </div>
+                      <div style={{marginTop:8, background: p.color, borderRadius:10, padding:"8px 12px"}}>
+                        <div style={{fontSize:11, fontWeight:700, color:p.tcolor, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:3}}>Used in Steps</div>
+                        <div style={{fontSize:12, color:p.tcolor}}>Step {p.steps.join(", Step ")}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Shopping checklist tip */}
+            <div style={{background:"var(--green-50)", border:"1px solid var(--green-100)", borderRadius:12, padding:14, marginTop:4}}>
+              <div style={{fontSize:13, fontWeight:700, color:"var(--green-700)", marginBottom:6}}>💡 Smart Buying Tips</div>
+              <div style={{fontSize:12, color:"var(--text-mid)", lineHeight:1.6}}>
+                Buy Halts and Turf Builder in Jan–Feb before they sell out. Seed goes on sale in October at Home Depot — stock up. Rent the aerator a week early in August. Mesotrione is cheapest on Amazon.
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── NAV ICONS ───────────────────────────────────────────────────────────
+    const HomeIcon     = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
+    const PlanIcon     = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
+    const LogIcon      = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>;
+    const ProductsIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>;
+    const ToolsIcon    = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>;
+
+    // ─── RENDER ───────────────────────────────────────────────────────────────
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
