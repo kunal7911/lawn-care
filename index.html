@@ -333,7 +333,7 @@
     // ─── TASK DATA ───────────────────────────────────────────────────────────
     // Bump this version string whenever INITIAL_TASKS definitions change.
     // On load the app merges: task definitions from code, completed status from localStorage.
-    const TASKS_VERSION = "4";
+    const TASKS_VERSION = "5";
 
     const INITIAL_TASKS = [
       { id:1, step:1, window:"Feb 19", sortMonth:2, type:"Fertilizer", emoji:"🌱",
@@ -366,82 +366,89 @@
 
       { id:5, step:5, window:"Apr 15–30", sortMonth:4, type:"Fertilizer", emoji:"🌾",
         title:"Scotts Turf Builder — Half Rate (No Weed Control)",
-        desc:"Use Scotts Turf Builder (plain, no weed control) at half the bag rate. Weed & Feed was removed because it pushes excessive top growth before summer heat stress, and the herbicide can damage Tall Fescue as temperatures rise. Weeds are handled separately — continue spot-spraying with your Mesotrione instead.",
+        desc:"Use Scotts Turf Builder (plain, no weed control) at half the bag rate. Weed & Feed was removed because it pushes excessive top growth before summer heat stress, and the herbicide can damage Tall Fescue as temperatures rise. Weeds are handled separately with Mesotrione spot spray (Step 6).",
         notes:"Apply at HALF the bag rate. Mow before applying. Keep mower at 3.5\". Skip entirely if temps are consistently above 80°F — wait until fall.",
         verified:"✅ Scotts Turf Builder plain only. No Weed & Feed on Tall Fescue.",
         completed:false, completedDate:null },
 
-      { id:6, step:6, window:"May", sortMonth:5, type:"Mowing", emoji:"🌿",
+      { id:6, step:6, window:"Apr 15–May 15", sortMonth:4, type:"Weed Control", emoji:"🧴",
+        title:"Mesotrione Spot Spray — Spring Weed Control",
+        desc:"Spot spray any visible weeds with Mesotrione (Tenacity). Mix 1 tsp Mesotrione + 3 tsp Surfactant per gallon of water. Add blue dye to track coverage. This replaces the weed control that was in Weed & Feed — targeted spray is safer for Tall Fescue than a broadcast herbicide.",
+        notes:"Spot spray only — do not broadcast over entire lawn. Avoid spraying on days above 85°F. Do not mow for 2 days after spraying.",
+        verified:"✅ Separate targeted Mesotrione spray is the correct approach for Tall Fescue Zone 7b.",
+        completed:false, completedDate:null },
+
+      { id:7, step:7, window:"May", sortMonth:5, type:"Mowing", emoji:"🌿",
         title:"Maintain 3.5\" — Prime Growth Month",
         desc:"May is Tall Fescue's fastest month. Mow every 5–7 days. Keep blades sharp.",
         notes:"Dull blades shred tips and cause browning. Consider sharpening before May.",
         verified:"✅ Correct. May is peak fescue season.",
         completed:false, completedDate:null },
 
-      { id:7, step:7, window:"May 20–30", sortMonth:5, type:"Amendment", emoji:"🪨",
+      { id:8, step:8, window:"May 20–30", sortMonth:5, type:"Amendment", emoji:"🪨",
         title:"Apply Pelletized Lime (if pH < 6.0)",
         desc:"IF soil test shows pH below 6.0, apply pelletized lime per test recommendation.",
         notes:"Fescue needs pH 6.0–6.5. Concord red clay often runs acidic. Pelletized is faster than ag lime.",
         verified:"✅ Correct product and timing. Wait for test results.",
         completed:false, completedDate:null },
 
-      { id:8, step:8, window:"June 1", sortMonth:6, type:"Mowing", emoji:"⬆️",
+      { id:9, step:9, window:"June 1", sortMonth:6, type:"Mowing", emoji:"⬆️",
         title:"RAISE Mower to 4.0\" — Summer",
         desc:"On or before June 1, raise mower deck to 4.0\". This is the most critical summer move.",
         notes:"Taller grass shades soil, keeps roots cooler. This is the difference between survival and failure.",
         verified:"✅ Critical. Do not skip.",
         completed:false, completedDate:null },
 
-      { id:9, step:9, window:"June–August", sortMonth:6, type:"Weed Control", emoji:"🧴",
+      { id:10, step:10, window:"June–August", sortMonth:6, type:"Weed Control", emoji:"🧴",
         title:"Spot Spray Only — NO Fertilizer",
         desc:"Spot treat weeds with 1 tsp Mesotrione + 3 tsp Surfactant per gallon. Zero fertilizer this period.",
         notes:"Fertilizing fescue in summer is the #1 mistake in NC. It forces weak growth during heat stress.",
         verified:"✅ Absolutely correct. Hold firm.",
         completed:false, completedDate:null },
 
-      { id:10, step:10, window:"Jun 15–30", sortMonth:6, type:"Fungicide", emoji:"🍄",
+      { id:11, step:11, window:"Jun 15–30", sortMonth:6, type:"Fungicide", emoji:"🍄",
         title:"Apply Scotts DiseaseEx — Brown Patch",
         desc:"Apply Scotts DiseaseEx preventively before first hot/humid stretch.",
         notes:"⚠️ Apply EARLY if you see circular brown patches forming. Don't wait for the calendar date.",
         verified:"✅ Brown Patch is common in Concord. Preventive is better than reactive.",
         completed:false, completedDate:null },
 
-      { id:11, step:11, window:"July–August", sortMonth:7, type:"Mowing", emoji:"☀️",
+      { id:12, step:12, window:"July–August", sortMonth:7, type:"Mowing", emoji:"☀️",
         title:"Maintain 4.0\" — Every 10–14 Days",
         desc:"Reduce frequency. Never mow wilting or drought-stressed grass.",
         notes:"If it looks brown and isn't growing — don't mow. Semi-dormancy is okay. Water deeply 1–2x/week.",
         verified:"✅ Correct summer protocol.",
         completed:false, completedDate:null },
 
-      { id:12, step:12, window:"Sept 1–15", sortMonth:9, type:"Mowing", emoji:"✂️",
+      { id:13, step:13, window:"Sept 1–15", sortMonth:9, type:"Mowing", emoji:"✂️",
         title:"Lower Mower to 3.0\" — Seeding Prep",
         desc:"Before aerating, lower deck to 3.0\" to help new seed reach soil.",
         notes:"⚠️ CORRECTED from original (was 2.5\"): 3.0\" achieves good seed contact without stressing existing turf in warm September temps.",
         verified:"⚠️ CORRECTED: Changed from 2.5\" → 3.0\" for better results.",
         completed:false, completedDate:null },
 
-      { id:13, step:13, window:"Sept 5–20", sortMonth:9, type:"Renovation", emoji:"🌱",
+      { id:14, step:14, window:"Sept 5–20", sortMonth:9, type:"Renovation", emoji:"🌱",
         title:"Aerate & Overseed + Starter Fert",
         desc:"Core aerate, then spread quality Tall Fescue blend. Apply Scotts Starter Fertilizer. Water daily for 2–3 weeks.",
         notes:"MOST IMPORTANT step of the year. Use Turf-Type Tall Fescue blend — not a budget mix.",
         verified:"✅ September is #1 month for fescue renovation in NC.",
         completed:false, completedDate:null },
 
-      { id:14, step:14, window:"Sept 5–20", sortMonth:9, type:"Weed Control", emoji:"🛡️",
+      { id:15, step:15, window:"Sept 5–20", sortMonth:9, type:"Weed Control", emoji:"🛡️",
         title:"Spray Mesotrione + Blue Dye (NO surfactant)",
         desc:"Apply Mesotrione without surfactant to suppress weeds near germinating seed.",
         notes:"DO NOT add surfactant — it kills germinating seedlings. Blue dye tracks your coverage.",
         verified:"✅ Correct and advanced technique.",
         completed:false, completedDate:null },
 
-      { id:15, step:15, window:"Oct 15–30", sortMonth:10, type:"Mowing", emoji:"🌾",
+      { id:16, step:16, window:"Oct 15–30", sortMonth:10, type:"Mowing", emoji:"🌾",
         title:"First Mow of New Grass at 3.0\"",
         desc:"Wait until seedlings reach 4.5\" then cut to 3.0\". Sharp blades essential.",
         notes:"Dull blades pull seedlings out by the roots. Sharpen before this mow.",
         verified:"✅ Correct. Don't rush the first post-seeding mow.",
         completed:false, completedDate:null },
 
-      { id:16, step:16, window:"Nov 15–Dec 1", sortMonth:11, type:"Fertilizer", emoji:"❄️",
+      { id:17, step:17, window:"Nov 15–Dec 1", sortMonth:11, type:"Fertilizer", emoji:"❄️",
         title:"Scotts WinterGuard (Step 4)",
         desc:"Apply Scotts Step 4 WinterGuard — deep root feeding with potassium for winter.",
         notes:"This feeds 2027 spring green-up. Apply before first hard freeze.",
