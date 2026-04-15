@@ -331,6 +331,10 @@
     const { useState, useEffect, useCallback } = React;
 
     // ─── TASK DATA ───────────────────────────────────────────────────────────
+    // Bump this version string whenever INITIAL_TASKS definitions change.
+    // On load the app merges: task definitions from code, completed status from localStorage.
+    const TASKS_VERSION = "3";
+
     const INITIAL_TASKS = [
       { id:1, step:1, window:"Feb 19", sortMonth:2, type:"Fertilizer", emoji:"🌱",
         title:"Scotts Halts — Pre-Emergent",
@@ -555,7 +559,20 @@
     // ─── APP ─────────────────────────────────────────────────────────────────
     function App() {
       const [tab, setTab]         = useState("home");
-      const [tasks, setTasks]     = useState(() => load("lawnTasks26", INITIAL_TASKS));
+      const [tasks, setTasks]     = useState(() => {
+        const stored = load("lawnTasks26", null);
+        const storedVersion = localStorage.getItem("lawnTasksVersion");
+        // If no stored data or version mismatch: merge definitions from code, keep completed status
+        if (!stored || storedVersion !== TASKS_VERSION) {
+          const merged = INITIAL_TASKS.map(def => {
+            const old = stored ? stored.find(t => t.id === def.id) : null;
+            return old ? { ...def, completed: old.completed, completedDate: old.completedDate } : def;
+          });
+          localStorage.setItem("lawnTasksVersion", TASKS_VERSION);
+          return merged;
+        }
+        return stored;
+      });
       const [mowLogs, setMowLogs] = useState(() => load("mowLogs26", []));
 
       // Gist sync state
